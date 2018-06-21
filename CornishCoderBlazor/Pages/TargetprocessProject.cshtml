@@ -1,0 +1,102 @@
+﻿@page "/targetprocess"
+@inject HttpClient Http
+@using Microsoft.AspNetCore.Blazor.Browser.Interop
+@using Newtonsoft.Json
+@using System.IO
+@using System.Runtime.Serialization
+@using System.Runtime.Serialization.Json
+@using System.Text
+<h1>Targetprocess Project</h1>
+
+<p>This component demonstrates fetching features from Targetprocess.</p>
+
+@if (features == null)
+{
+<p><em>Loading...</em></p>
+}
+else
+{
+<Label>@title</Label>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Name</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var feature in features.items)
+            {
+        <tr>
+            <td>@feature.Id</td>
+            <td>@feature.Name</td>
+            <td>@feature.Description</td>
+        </tr>
+            }
+    </tbody>
+</table>
+}
+
+@functions {
+    Items features = new Items();
+    string title = "Hello, World!";
+
+    protected override async Task OnInitAsync()
+    {
+        var sampleData = "sample-data/features2.json";
+        var url = @"https://bluefruit.tpondemand.com/api/v1/Features?where=Project.Id%20in%20(272)&include=[Id,%20Name,%20Description]&format=json&access_token=Mjg6MDlnOTArV1FlZHN0QWorWm1BUnpKajdJa29RbUxrc1UyUCt6VStxZTUvYz0=";
+
+        RegisteredFunction.Invoke<string>("jsUpdateTitle", url);
+        GetFeatures(url);
+    }
+
+    public void UpdateTitle(string text)
+    {
+        title = text;
+    }
+
+    public void ApiCallback(string data)
+    {
+        title = "ApiCallback!";
+        var serializer = new DataContractJsonSerializer(typeof(List<Item>));
+
+        var ms = new MemoryStream(Encoding.UTF8.GetBytes(data));
+        var f = (List<Item>) serializer.ReadObject(ms);
+        Console.WriteLine(f);
+
+
+        foreach(var i in f)
+        {
+            Console.WriteLine(i.Id);
+            features.items.Add(i);
+        }
+
+        Console.WriteLine("OK");
+    }
+
+    public void GetFeatures(string url)
+    {
+        title = "GetFeatures called!";
+        RegisteredFunction.Invoke<string>("jsonP", url);
+    }
+
+    public class Items
+    {
+        public List<Item> items {get; set;}
+        public Items()
+        {
+            items = new List<Item>();
+        }
+    }
+
+    [DataContract]
+    public class Item
+    {
+        [DataMember] public string ResourceType { get; set; }
+        [DataMember] public int Id { get; set; }
+        [DataMember] public string Name { get; set; }
+        [DataMember] public string Description { get; set; }
+    }
+}
+

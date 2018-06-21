@@ -1,0 +1,62 @@
+﻿[
+  {
+    "ResourceType": "Feature",
+    "Id": 4042,
+    "Name": "Windows Application",
+    "Description": null
+  },
+  {
+    "ResourceType": "Feature",
+    "Id": 4041,
+    "Name": "Update Firmware",
+    "Description": null
+  },
+  {
+    "ResourceType": "Feature",
+    "Id": 4040,
+    "Name": "Sample Results",
+    "Description": null
+  },
+  {
+    "ResourceType": "Feature",
+    "Id": 4039,
+    "Name": "EMIS Integration",
+    "Description": "<!--markdown-->In order to keep a record of a patient's urine sample analysis\nAs a user\nI want to transfer the results to the EMIS patient management system"
+  },
+  {
+    "ResourceType": "Feature",
+    "Id": 4038,
+    "Name": "Displaying Device Status",
+    "Description": "<!--markdown-->In order to understand the current status of a connected UTS device\nAs a user\nI want to see device status information displayed in the windows application\n\nQuestions:\nWhen would the battery level be unknown? When top removed?\n"
+  },
+  {
+    "ResourceType": "Feature",
+    "Id": 4037,
+    "Name": "Displaying Device Errors",
+    "Description": "<!--markdown-->In order to understand why the device has gone wrong\nAs a user\nI want to see device error messages in the windows application"
+  },
+  {
+    "ResourceType": "Feature",
+    "Id": 4036,
+    "Name": "Analysing Sample",
+    "Description": "<!--markdown-->In order to see when the UTS device is analysing a sample\nAs a user\nI want to see a screen displaying a countdown until sample analysis is complete\n\nQuestions:\nWill sample analysis time vary?"
+  },
+  {
+    "ResourceType": "Feature",
+    "Id": 4013,
+    "Name": "Test Feature",
+    "Description": null
+  },
+  {
+    "ResourceType": "Feature",
+    "Id": 3995,
+    "Name": "Software Lock",
+    "Description": "<!--markdown-->In order to restrict the use of the UTS Device to licensed users\nAs a business person\nI want to be able to lock the software\n\nQuestions:\nWhat should happen if a licence expires during use?\n"
+  },
+  {
+    "ResourceType": "Feature",
+    "Id": 3964,
+    "Name": "Web Licence Server",
+    "Description": "<!--markdown-->In order to tell if a UTS device is licensed\nAs a business person\nI want to query a web server with the device serial number"
+  }
+]
