@@ -1,13 +1,44 @@
 ﻿@page "/fetchdata"
 @inject HttpClient Http
+@using Microsoft.AspNetCore.Blazor.Browser.Interop
+@using System.Runtime.Serialization.Json
+@using System.Text
+@using System.IO
+
 
 <h1>Weather forecast</h1>
 
 <p>This component demonstrates fetching data from the server.</p>
 
-@if (forecasts == null)
+<table>
+    <tr>
+        <td>
+            <Label>City:</Label>
+        </td>
+        <td>
+            <input type="text" bind="@city" />
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <Label>OpenWeatherMap Api Key:</Label>
+        </td>
+        <td>
+            <input type="text" bind="@apiKey" />
+        </td>
+    </tr>
+    <tr>
+        <td></td>
+        <td>
+            <button class="btn btn-primary" onclick="@OnClick">Get Forecast</button>
+        </td>
+    </tr>
+</table>
+
+
+@if (forecasts.Count() == 0)
 {
-    <p><em>Loading...</em></p>
+    <p><em>Please enter City and OpenWeatherMap Api Key...</em></p>
 }
 else
 {
@@ -16,7 +47,7 @@ else
             <tr>
                 <th>Date</th>
                 <th>Temp. (C)</th>
-                <th>Temp. (F)</th>
+                <th>Wind Speed</th>
                 <th>Summary</th>
             </tr>
         </thead>
@@ -26,7 +57,7 @@ else
                 <tr>
                     <td>@forecast.Date.ToShortDateString()</td>
                     <td>@forecast.TemperatureC</td>
-                    <td>@forecast.TemperatureF</td>
+                    <td>@forecast.WindSpeed</td>
                     <td>@forecast.Summary</td>
                 </tr>
             }
@@ -35,18 +66,123 @@ else
 }
 
 @functions {
-    WeatherForecast[] forecasts;
+        List<WeatherForecast> forecasts = new List<WeatherForecast>();
+        string city;
+        string apiKey;
 
-    protected override async Task OnInitAsync()
-    {
-        forecasts = await Http.GetJsonAsync<WeatherForecast[]>("sample-data/weather.json");
-    }
+        protected void OnClick()
+        {
+            var url = $"http://api.openweathermap.org/data/2.5/forecast?APPID={apiKey}&q={city}&units=metric";
+            RegisteredFunction.Invoke<string>("jsonP", url);
+        }
+
+        public void ApiCallback(string data)
+        {
+            var serializer = new DataContractJsonSerializer(typeof(RootObject));
+
+            using (var ms = new MemoryStream(Encoding.UTF8.GetBytes(data)))
+            {
+                var rootObject = serializer.ReadObject(ms) as RootObject;
+                foreach (var entry in rootObject.list)
+                {
+                    var f = new WeatherForecast()
+                    {
+                        Date = DateTime.Parse(entry.dt_txt),
+                        TemperatureC = entry.main.temp,
+                        WindSpeed = entry.wind.speed,
+                        Summary = entry.weather.Single().description
+                    };
+
+                    Console.WriteLine($"{f.Date} - {f.TemperatureC} - {f.WindSpeed} - {f.Summary}");
+                    try
+                    {
+                        forecasts?.Add(f);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Exception: {ex.Message}");
+                    }
+                }
+            }
+        }
 
     class WeatherForecast
     {
         public DateTime Date { get; set; }
-        public int TemperatureC { get; set; }
-        public int TemperatureF { get; set; }
+        public double TemperatureC { get; set; }
+        public double WindSpeed { get; set; }
         public string Summary { get; set; }
+    }
+
+    // OpenWeatherApi weather api response classes
+    public class Main
+    {
+        public double temp { get; set; }
+        public double temp_min { get; set; }
+        public double temp_max { get; set; }
+        public double pressure { get; set; }
+        public double sea_level { get; set; }
+        public double grnd_level { get; set; }
+        public int humidity { get; set; }
+        public double temp_kf { get; set; }
+    }
+
+    public class Weather
+    {
+        public int id { get; set; }
+        public string main { get; set; }
+        public string description { get; set; }
+        public string icon { get; set; }
+    }
+
+    public class Clouds
+    {
+        public int all { get; set; }
+    }
+
+    public class Wind
+    {
+        public double speed { get; set; }
+        public double deg { get; set; }
+    }
+
+    public class Sys
+    {
+        public string pod { get; set; }
+    }
+
+    public class List
+    {
+        public int dt { get; set; }
+        public Main main { get; set; }
+        public List<Weather> weather { get; set; }
+        public Clouds clouds { get; set; }
+        public Wind wind { get; set; }
+        public Sys sys { get; set; }
+        public string dt_txt { get; set; }
+    }
+
+    public class Coord
+    {
+        public double lat { get; set; }
+        public double lon { get; set; }
+    }
+
+    public class City
+    {
+        public int id { get; set; }
+        public string name { get; set; }
+        public Coord coord { get; set; }
+        public string country { get; set; }
+        public int population { get; set; }
+    }
+
+    public class RootObject
+    {
+        public string cod { get; set; }
+        public double message { get; set; }
+        public int cnt { get; set; }
+        public List<List> list { get; set; }
+        public City city { get; set; }
     }
 }
