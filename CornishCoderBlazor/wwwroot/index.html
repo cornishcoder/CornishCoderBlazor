@@ -15,5 +15,18 @@
     </script>
     <script src="js/J50Npi.min.js"></script>
     <script src="js/WeatherApi.js"></script>
+    <script>
+        Blazor.registerFunction('increment', function (number) {
+            const incrementCallback = Blazor.platform.findMethod(
+                'CornishCoderBlazor',
+                'CornishCoderBlazor.Pages',
+                'Counter',
+                'IncrementCallback'
+            );
+            var newNumber = number + 1;
+            var newNumberAsString = '' + newNumber;
+            Blazor.platform.callMethod(incrementCallback, null, [Blazor.platform.toDotNetString(newNumberAsString)]);
+        });
+    </script>
 </body>
 </html>
