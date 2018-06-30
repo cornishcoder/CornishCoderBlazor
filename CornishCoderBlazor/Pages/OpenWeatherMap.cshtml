@@ -1,14 +1,15 @@
-﻿@page "/fetchdata"
+﻿@page "/openweathermap"
 @inject HttpClient Http
 @using Microsoft.AspNetCore.Blazor.Browser.Interop
+@using System.Runtime.Serialization
 @using System.Runtime.Serialization.Json
 @using System.Text
 @using System.IO
 
 
-<h1>Weather forecast</h1>
+<h1>OpenWeatherMap Forecast</h1>
 
-<p>This component demonstrates fetching data from the server.</p>
+<p>This component demonstrates Blazor js interop by fetching data with a jsonP call to OpenWeatherMap API.</p>
 
 <table>
     <tr>
@@ -21,7 +22,7 @@
     </tr>
     <tr>
         <td>
-            <Label>OpenWeatherMap Api Key:</Label>
+            <Label>Api Key:</Label>
         </td>
         <td>
             <input type="text" bind="@apiKey" />
@@ -36,7 +37,7 @@
 </table>
 
 
-@if (forecasts.Count() == 0)
+@if (Forecasts.Count() == 0)
 {
     <p><em>Please enter City and OpenWeatherMap Api Key...</em></p>
 }
@@ -45,17 +46,17 @@ else
     <table class="table">
         <thead>
             <tr>
-                <th>Date</th>
+                <th>Date and Time</th>
                 <th>Temp. (C)</th>
                 <th>Wind Speed</th>
                 <th>Summary</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var forecast in forecasts)
+            @foreach (var forecast in Forecasts)
             {
                 <tr>
-                    <td>@forecast.Date.ToShortDateString()</td>
+                    <td>@forecast.Date.ToString("dddd d MMMM  HH:mm")</td>
                     <td>@forecast.TemperatureC</td>
                     <td>@forecast.WindSpeed</td>
                     <td>@forecast.Summary</td>
@@ -66,47 +67,37 @@ else
 }
 
 @functions {
-        List<WeatherForecast> forecasts = new List<WeatherForecast>();
-        string city;
-        string apiKey;
+    protected List<WeatherForecast> Forecasts { get; } = new List<WeatherForecast>();
+    string city;
+    string apiKey;
 
-        protected void OnClick()
+    protected async void OnClick()
+    {
+        Forecasts.Clear();
+
+        var url = $"http://api.openweathermap.org/data/2.5/forecast?APPID={apiKey}&q={city}&units=metric";
+        var data = await RegisteredFunction.InvokeAsync<string>("jsonP", url);
+        var serializer = new DataContractJsonSerializer(typeof(RootObject));
+
+        using (var ms = new MemoryStream(Encoding.UTF8.GetBytes(data)))
         {
-            var url = $"http://api.openweathermap.org/data/2.5/forecast?APPID={apiKey}&q={city}&units=metric";
-            RegisteredFunction.Invoke<string>("jsonP", url);
-        }
-
-        public void ApiCallback(string data)
-        {
-            var serializer = new DataContractJsonSerializer(typeof(RootObject));
-
-            using (var ms = new MemoryStream(Encoding.UTF8.GetBytes(data)))
+            var rootObject = serializer.ReadObject(ms) as RootObject;
+            foreach (var entry in rootObject.list)
             {
-                var rootObject = serializer.ReadObject(ms) as RootObject;
-                foreach (var entry in rootObject.list)
+                var f = new WeatherForecast()
                 {
-                    var f = new WeatherForecast()
-                    {
-                        Date = DateTime.Parse(entry.dt_txt),
-                        TemperatureC = entry.main.temp,
-                        WindSpeed = entry.wind.speed,
-                        Summary = entry.weather.Single().description
-                    };
-
-                    Console.WriteLine($"{f.Date} - {f.TemperatureC} - {f.WindSpeed} - {f.Summary}");
-                    try
-                    {
-                        forecasts?.Add(f);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Exception: {ex.Message}");
-                    }
-                }
+                    Date = DateTime.Parse(entry.dt_txt),
+                    TemperatureC = entry.main.temp,
+                    WindSpeed = entry.wind.speed,
+                    Summary = entry.weather.Single().description
+                };
+                Forecasts.Add(f);
             }
+            this.StateHasChanged();
         }
+    }
 
-    class WeatherForecast
+    public class WeatherForecast
     {
         public DateTime Date { get; set; }
         public double TemperatureC { get; set; }
