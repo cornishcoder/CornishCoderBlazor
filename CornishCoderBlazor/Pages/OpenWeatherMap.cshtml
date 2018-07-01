@@ -75,7 +75,7 @@ else
     {
         Forecasts.Clear();
 
-        var url = $"http://api.openweathermap.org/data/2.5/forecast?APPID={apiKey}&q={city}&units=metric";
+        var url = $"https://api.openweathermap.org/data/2.5/forecast?APPID={apiKey}&q={city}&units=metric";
         var data = await RegisteredFunction.InvokeAsync<string>("jsonP", url);
         var serializer = new DataContractJsonSerializer(typeof(RootObject));
 
